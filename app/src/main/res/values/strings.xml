@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">LatestDiscounts</string>
+    <string name="share_this_product">Share this product</string>
+    <string name="product_preview_image">Product preview image</string>
+    <string name="how_worth_buying">How worth buying</string>
+    <string name="how_many_comments">How many comments</string>
+    <string name="action_share_url">Share</string>
+</resources>

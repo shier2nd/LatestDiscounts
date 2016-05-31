@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/product_other_info"
+              style="@style/cardProductOtherInfoStyle"
+              android:orientation="horizontal">
+    <TextView
+        android:id="@+id/product_mall_and_date"
+        style="@style/viewProductOtherInfoTextStyle"/>
+
+    <!-- Empty TextView -->
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"/>
+
+    <ImageView
+        android:id="@+id/image_product_comments"
+        style="@style/viewProductOtherInfoImageStyle"
+        android:contentDescription="@string/how_many_comments"
+        android:src="@drawable/icon_ping_m"/>
+
+    <TextView
+        android:id="@+id/product_comments"
+        style="@style/viewProductOtherInfoTextStyle"
+        android:layout_marginEnd="7dp"/>
+
+    <ImageView
+        android:id="@+id/image_product_worthy"
+        style="@style/viewProductOtherInfoImageStyle"
+        android:contentDescription="@string/how_worth_buying"
+        android:src="@drawable/icon_zhi_m"/>
+
+    <TextView
+        android:id="@+id/product_worthy"
+        style="@style/viewProductOtherInfoTextStyle"/>
+</LinearLayout>
