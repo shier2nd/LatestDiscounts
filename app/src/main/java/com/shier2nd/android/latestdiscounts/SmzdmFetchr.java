@@ -3,13 +3,19 @@ package com.shier2nd.android.latestdiscounts;
 import android.net.Uri;
 import android.util.Log;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.FieldNamingStrategy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -54,7 +60,7 @@ public class SmzdmFetchr {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<DiscountItem> fetchItems(int page) {
+    public List<DiscountItem> fetchItems(int page, String timeSort) {
 
         List<DiscountItem> items = new ArrayList<>();
 
@@ -63,7 +69,7 @@ public class SmzdmFetchr {
                     .buildUpon()
                     .appendQueryParameter("limit", "20")
                     .appendQueryParameter("have_zhuanti", "1")
-                    .appendQueryParameter("time_sort", "")
+                    .appendQueryParameter("time_sort", timeSort)
                     .appendQueryParameter("page", String.valueOf(page))
                     .appendQueryParameter("f", "android")
                     .appendQueryParameter("s", API_S_PARAM)
@@ -71,11 +77,7 @@ public class SmzdmFetchr {
                     .appendQueryParameter("weixin", "0")
                     .build().toString();
             String jsonString = getUrlString(url);
-//            Log.i(TAG, "Received JSON: " + jsonString);
-            JSONObject jsonBody = new JSONObject(jsonString);
-            parseItems(items, jsonBody);
-        } catch (JSONException je) {
-            Log.e(TAG, "Failed to parse JSON", je);
+            parseItems(items, jsonString);
         } catch (IOException ioe) {
             Log.i(TAG, "Failed to fetch items", ioe);
         }
@@ -83,35 +85,73 @@ public class SmzdmFetchr {
         return items;
     }
 
-    private void parseItems(List<DiscountItem> items, JSONObject jsonBody)
-            throws IOException, JSONException {
+    /*
+    Simplify JSON parsing code by Gson
+     */
+    private void parseItems(List<DiscountItem> items, String jsonString) {
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(DiscountItem[].class, new SmzdmDeserializer())
+                .create();
+        DiscountItem[] discountList = gson.fromJson(jsonString, DiscountItem[].class);
 
-        JSONObject discountsJsonObject = jsonBody.getJSONObject("data");
-        JSONArray discountJsonArray = discountsJsonObject.getJSONArray("rows");
-
-        for (int i = 0; i < discountJsonArray.length(); i++) {
-            JSONObject discountJsonObject = discountJsonArray.getJSONObject(i);
-
-            if (!discountJsonObject.has("article_price") ||
-                    !discountJsonObject.has("article_worthy")) {
-                continue;
+        // Scan discountList
+        for (DiscountItem item : discountList) {
+            if (item.getWorthyNum() != null) {
+                items.add(item);
             }
-
-            DiscountItem item = new DiscountItem();
-            item.setChannelId(discountJsonObject.getString("article_channel_id"));
-            item.setDiscountId(discountJsonObject.getString("article_id"));
-            item.setPicUrl(discountJsonObject.getString("article_pic"));
-            item.setTitle(discountJsonObject.getString("article_title"));
-            item.setPrice(discountJsonObject.getString("article_price"));
-            item.setDate(discountJsonObject.getString("article_format_date"));
-            if (discountJsonObject.has("article_mall")) {
-                item.setMall(discountJsonObject.getString("article_mall"));
-            }
-            item.setCommentNum(discountJsonObject.getString("article_comment"));
-            item.setWorthyNum(discountJsonObject.getString("article_worthy"));
-            item.setUnworthyNum(discountJsonObject.getString("article_unworthy"));
-
-            items.add(item);
         }
     }
+
+    private class SmzdmDeserializer implements JsonDeserializer<DiscountItem[]> {
+
+        @Override
+        public DiscountItem[] deserialize(JsonElement je, Type type, JsonDeserializationContext jdc)
+                throws JsonParseException
+        {
+            // Get the "discounts" element from the parsed JSON
+            JsonElement discounts = je.getAsJsonObject().get("data");
+            JsonElement discountArray = discounts.getAsJsonObject().get("rows");
+
+            // Deserialize it. You use a new instance of Gson to avoid infinite recursion
+            // to this deserializer
+            Gson gson = new GsonBuilder()
+                    .setFieldNamingStrategy(new SmzdmFieldNamingStrategy())
+                    .create();
+            return gson.fromJson(discountArray, DiscountItem[].class);
+        }
+    }
+
+    private class SmzdmFieldNamingStrategy implements FieldNamingStrategy {
+
+        @Override
+        public String translateName(Field f) {
+            switch (f.getName()) {
+                case "mChannelId":
+                    return "article_channel_id";
+                case "mDiscountId":
+                    return "article_id";
+                case "mPicUrl":
+                    return "article_pic";
+                case "mTitle":
+                    return "article_title";
+                case "mPrice":
+                    return "article_price";
+                case "mDate":
+                    return "article_format_date";
+                case "mMall":
+                    return "article_mall";
+                case "mCommentNum":
+                    return "article_comment";
+                case "mWorthyNum":
+                    return "article_worthy";
+                case "mUnworthyNum":
+                    return "article_unworthy";
+                case "mTimeSort":
+                    return "time_sort";
+                default:
+                    return f.getName();
+            }
+        }
+    }
+
 }

@@ -16,6 +16,7 @@ public class DiscountItem {
     private String mCommentNum;
     private String mWorthyNum;
     private String mUnworthyNum;
+    private String mTimeSort;
 
     public String getChannelId() {
         return mChannelId;
@@ -95,6 +96,14 @@ public class DiscountItem {
 
     public void setUnworthyNum(String unworthyNum) {
         mUnworthyNum = unworthyNum;
+    }
+
+    public String getTimeSort() {
+        return mTimeSort;
+    }
+
+    public void setTimeSort(String timeSort) {
+        mTimeSort = timeSort;
     }
 
     public String getDateAndMall() {

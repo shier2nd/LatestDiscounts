@@ -22,6 +22,9 @@ public class DiscountItemsFragment extends Fragment {
 
     private RecyclerView mDiscountRecyclerView;
     private List<DiscountItem> mItems = new ArrayList<>();
+    private boolean mBackgroundIsLoading;
+    private int mLastFetchedPage;
+    private String mLastItemTimeSort;
 
     public static DiscountItemsFragment newInstance() {
         return new DiscountItemsFragment();
@@ -31,7 +34,9 @@ public class DiscountItemsFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemsTask().execute();
+        mLastFetchedPage = 0;
+        mLastItemTimeSort = "";
+        new FetchItemsTask().execute(mLastFetchedPage + 1);
     }
 
     @Nullable
@@ -42,7 +47,38 @@ public class DiscountItemsFragment extends Fragment {
 
         mDiscountRecyclerView = (RecyclerView) v
                 .findViewById(R.id.fragment_discount_items_recycler_view);
+        // Use a linear layout manager
         mDiscountRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        mDiscountRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            boolean isScrollingUp = false;
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                LinearLayoutManager layoutManager =
+                        (LinearLayoutManager) recyclerView.getLayoutManager();
+
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    int lastItemPosition = layoutManager.findLastCompletelyVisibleItemPosition();
+                    int totalItemsNumber = layoutManager.getItemCount();
+
+                    if (lastItemPosition == (totalItemsNumber - 1)
+                            && isScrollingUp && !mBackgroundIsLoading) {
+                        /*Log.i(TAG, "is loading page" + (mLastFetchedPage + 1) +
+                                ", the current total items number is " + totalItemsNumber);*/
+                        /*Toast.makeText(getActivity(),
+                                R.string.toast_loading_new_page, Toast.LENGTH_SHORT).show();*/
+                        new FetchItemsTask().execute(mLastFetchedPage + 1);
+                    }
+                }
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                isScrollingUp = (dy > 0);
+            }
+        });
 
         setupAdapter();
 
@@ -55,16 +91,41 @@ public class DiscountItemsFragment extends Fragment {
         }
     }
 
-    private class FetchItemsTask extends AsyncTask<Void, Void, List<DiscountItem>> {
+    private class FetchItemsTask extends AsyncTask<Integer, Void, List<DiscountItem>> {
         @Override
-        protected List<DiscountItem> doInBackground(Void... params) {
-            return new SmzdmFetchr().fetchItems(1);
+        protected void onPreExecute() {
+            mBackgroundIsLoading = true;
+
+            if (mLastFetchedPage > 0) {
+                // Add null, so the adapter will check view_type and show progress bar at bottom
+                mItems.add(null);
+                mDiscountRecyclerView.getAdapter().notifyItemInserted(mItems.size() - 1);
+            }
+        }
+
+        @Override
+        protected List<DiscountItem> doInBackground(Integer... params) {
+            return new SmzdmFetchr().fetchItems(params[0], mLastItemTimeSort);
         }
 
         @Override
         protected void onPostExecute(List<DiscountItem> discountItems) {
-            mItems = discountItems;
-            setupAdapter();
+            mBackgroundIsLoading = false;
+
+            if (mLastFetchedPage++ > 0) {
+                // Remove progress item
+                mItems.remove(mItems.size() - 1);
+                mDiscountRecyclerView.getAdapter().notifyItemRemoved(mItems.size());
+                // Add the new page items to mItems
+                mItems.addAll(discountItems);
+                mDiscountRecyclerView.getAdapter().notifyDataSetChanged();
+            } else {
+                mItems = discountItems;
+                setupAdapter();
+            }
+
+            // Get time_sort of the last item as the param for the request url of next page
+            mLastItemTimeSort = discountItems.get(discountItems.size() - 1).getTimeSort();
         }
     }
 }

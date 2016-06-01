@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -18,8 +19,9 @@ import java.util.List;
 /**
  * Created by Woodinner on 5/30/16.
  */
-public class DiscountAdapter
-        extends RecyclerView.Adapter<DiscountAdapter.DiscountHolder> {
+public class DiscountAdapter extends RecyclerView.Adapter {
+    private final int VIEW_PROG = 0;
+    private final int VIEW_ITEM = 1;
 
     private List<DiscountItem> mDiscountItems;
     private Context mContext;
@@ -29,45 +31,66 @@ public class DiscountAdapter
     }
 
     @Override
-    public DiscountHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        mContext = parent.getContext();
-
-        View itemView = LayoutInflater
-                .from(mContext)
-                .inflate(R.layout.card_discounts_item, parent, false);
-
-        return new DiscountHolder(itemView, new DiscountHolder.ClickResponseListener() {
-            @Override
-            public void onWholeClick(int position) {
-                browse(mContext, position);
-            }
-
-            @Override
-            public void onOverflowClick(View v, int position) {
-                final int pos = position;
-                PopupMenu popup = new PopupMenu(mContext, v);
-                MenuInflater inflater = popup.getMenuInflater();
-                inflater.inflate(R.menu.contextual_discount_list, popup.getMenu());
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getItemId()) {
-                            case R.id.action_share_url:
-                                share(mContext, pos);
-                                break;
-                        }
-                        return true;
-                    }
-                });
-                popup.show();
-            }
-        });
+    public int getItemViewType(int position) {
+        return mDiscountItems.get(position) != null ? VIEW_ITEM : VIEW_PROG;
     }
 
     @Override
-    public void onBindViewHolder(DiscountHolder holder, int position) {
-        DiscountItem discountItem = mDiscountItems.get(position);
-        holder.bindDiscountItem(discountItem, mContext);
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        mContext = parent.getContext();
+
+        RecyclerView.ViewHolder viewHolder;
+
+        if (viewType == VIEW_ITEM) {
+            View itemView = LayoutInflater
+                    .from(mContext)
+                    .inflate(R.layout.card_discounts_item, parent, false);
+
+            viewHolder = new DiscountViewHolder(itemView,
+                    new DiscountViewHolder.ClickResponseListener() {
+                        @Override
+                        public void onWholeClick(int position) {
+                            browse(mContext, position);
+                        }
+
+                        @Override
+                        public void onOverflowClick(View v, int position) {
+                            final int pos = position;
+                            PopupMenu popup = new PopupMenu(mContext, v);
+                            MenuInflater inflater = popup.getMenuInflater();
+                            inflater.inflate(R.menu.contextual_discount_list, popup.getMenu());
+                            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                @Override
+                                public boolean onMenuItemClick(MenuItem item) {
+                                    switch (item.getItemId()) {
+                                        case R.id.action_share_url:
+                                            share(mContext, pos);
+                                            break;
+                                    }
+                                    return true;
+                                }
+                            });
+                            popup.show();
+                        }
+                    });
+        } else {
+            View itemView = LayoutInflater
+                    .from(mContext)
+                    .inflate(R.layout.progressbar_load_more, parent, false);
+            viewHolder = new ProgressViewHolder(itemView);
+        }
+
+        return viewHolder;
+    }
+
+    @Override
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof DiscountViewHolder) {
+            DiscountItem discountItem = mDiscountItems.get(position);
+            ((DiscountViewHolder) holder).bindDiscountItem(discountItem, mContext);
+        } else {
+            ((ProgressViewHolder) holder).progressBar.setIndeterminate(true);
+        }
     }
 
     @Override
@@ -79,7 +102,7 @@ public class DiscountAdapter
 
     private void share(Context context, int position) {}
 
-    public static class DiscountHolder extends RecyclerView.ViewHolder
+    public static class DiscountViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
         public ImageView productImage;
@@ -94,7 +117,7 @@ public class DiscountAdapter
 
         private ClickResponseListener mClickResponseListener;
 
-        public DiscountHolder(View itemView, ClickResponseListener clickResponseListener) {
+        public DiscountViewHolder(View itemView, ClickResponseListener clickResponseListener) {
             super(itemView);
 
             mClickResponseListener = clickResponseListener;
@@ -140,6 +163,15 @@ public class DiscountAdapter
             void onWholeClick(int position);
 
             void onOverflowClick(View v, int position);
+        }
+    }
+
+    public static class ProgressViewHolder extends RecyclerView.ViewHolder {
+        public ProgressBar progressBar;
+
+        public ProgressViewHolder(View v) {
+            super(v);
+            progressBar = (ProgressBar) v.findViewById(R.id.progress_bar_load_more);
         }
     }
 }
