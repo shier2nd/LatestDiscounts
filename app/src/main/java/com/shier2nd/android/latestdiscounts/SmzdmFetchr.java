@@ -29,6 +29,8 @@ public class SmzdmFetchr {
     private static final String TAG = "SmzdmFetchr";
 
     private static final String API_S_PARAM = "MJS4lEe6fybJ33KUSAc0FYlCG7o0wJFk";
+    private static final String HOME_REQUEST_URL_TYPE = "https://api.smzdm.com/v1/home/articles/";
+    private static final String SEARCH_REQUEST_URL_TYPE = "https://api.smzdm.com/v2/search";
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
@@ -60,22 +62,23 @@ public class SmzdmFetchr {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<DiscountItem> fetchItems(int page, String timeSort) {
+    public List<DiscountItem> fetchHomeDiscounts(int page, String timeSort) {
+        String s = String.valueOf(page);
+        String url = buildUrl(HOME_REQUEST_URL_TYPE, s, timeSort, null, null);
+        return downloadDiscountItems(url);
+    }
+
+    public List<DiscountItem> searchDiscounts(int offset, String query) {
+        String s = String.valueOf(offset);
+        String url = buildUrl(SEARCH_REQUEST_URL_TYPE, null, null, query, s);
+        return downloadDiscountItems(url);
+    }
+
+    public List<DiscountItem> downloadDiscountItems(String url) {
 
         List<DiscountItem> items = new ArrayList<>();
 
         try {
-            String url = Uri.parse("https://api.smzdm.com/v1/home/articles/")
-                    .buildUpon()
-                    .appendQueryParameter("limit", "20")
-                    .appendQueryParameter("have_zhuanti", "1")
-                    .appendQueryParameter("time_sort", timeSort)
-                    .appendQueryParameter("page", String.valueOf(page))
-                    .appendQueryParameter("f", "android")
-                    .appendQueryParameter("s", API_S_PARAM)
-                    .appendQueryParameter("v", "317")
-                    .appendQueryParameter("weixin", "0")
-                    .build().toString();
             String jsonString = getUrlString(url);
             parseItems(items, jsonString);
         } catch (IOException ioe) {
@@ -83,6 +86,38 @@ public class SmzdmFetchr {
         }
 
         return items;
+    }
+
+    private String buildUrl(String requestUrlType,
+                            String page, String timeSort,
+                            String query, String offset) {
+        Uri.Builder uriBuilder = new Uri.Builder();
+
+        switch (requestUrlType) {
+            case HOME_REQUEST_URL_TYPE:
+                uriBuilder = Uri.parse(HOME_REQUEST_URL_TYPE)
+                        .buildUpon()
+                        .appendQueryParameter("limit", "20")
+                        .appendQueryParameter("have_zhuanti", "1")
+                        .appendQueryParameter("time_sort", timeSort)
+                        .appendQueryParameter("page", page);
+                break;
+            case SEARCH_REQUEST_URL_TYPE:
+                uriBuilder = Uri.parse(SEARCH_REQUEST_URL_TYPE)
+                        .buildUpon()
+                        .appendQueryParameter("keyword", query)
+                        .appendQueryParameter("type", "home")
+                        .appendQueryParameter("limit", "20")
+                        .appendQueryParameter("offset", offset)
+                        .appendQueryParameter("order", "");
+                break;
+        }
+
+        return  uriBuilder.appendQueryParameter("f", "android")
+                .appendQueryParameter("s", API_S_PARAM)
+                .appendQueryParameter("v", "317")
+                .appendQueryParameter("weixin", "0")
+                .build().toString();
     }
 
     /*
