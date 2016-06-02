@@ -17,7 +17,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,8 @@ public class DiscountItemsFragment extends Fragment {
     private ProgressBar mProgressBar;
     private boolean mShouldShowProgressBar;
     private boolean mIsInHomePage;
+    private LinearLayout mNoCrimesView;
+    private TextView mNoResultTextView;
 
     public static DiscountItemsFragment newInstance() {
         return new DiscountItemsFragment();
@@ -96,6 +100,9 @@ public class DiscountItemsFragment extends Fragment {
         showProgressBar(mShouldShowProgressBar);
 
         setupAdapter();
+
+        mNoCrimesView = (LinearLayout) v.findViewById(R.id.no_items_view);
+        mNoResultTextView = (TextView) v.findViewById(R.id.no_result_text_view);
 
         return v;
     }
@@ -287,13 +294,24 @@ public class DiscountItemsFragment extends Fragment {
                 setupAdapter();
             }
 
+            // Get time_sort of the last item as the param for the request url of next page
+            if (discountItems.size() != 0) {
+                mLastItemTimeSort = discountItems.get(discountItems.size() - 1).getTimeSort();
+            }
+
             // Set the visibility of Clear Search menu option
             mIsInHomePage = (mQuery == null);
             getActivity().invalidateOptionsMenu();
 
-            // Get time_sort of the last item as the param for the request url of next page
-            if (discountItems.size() != 0) {
-                mLastItemTimeSort = discountItems.get(discountItems.size() - 1).getTimeSort();
+            // If there is no matched search result, display no_items_view
+            if (mItems.size() < 1) {
+                String noResultText = getString(R.string.no_result, mQuery);
+                mNoResultTextView.setText(noResultText);
+                mNoCrimesView.setVisibility(View.VISIBLE);
+                mDiscountRecyclerView.setVisibility(View.INVISIBLE);
+            } else {
+                mNoCrimesView.setVisibility(View.INVISIBLE);
+                mDiscountRecyclerView.setVisibility(View.VISIBLE);
             }
         }
     }
