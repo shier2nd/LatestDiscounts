@@ -160,8 +160,8 @@ public class SmzdmFetchr {
         @Override
         public String translateName(Field f) {
             switch (f.getName()) {
-                case "mChannelId":
-                    return "article_channel_id";
+                case "mChannelName":
+                    return "article_channel_name";
                 case "mDiscountId":
                     return "article_id";
                 case "mPicUrl":

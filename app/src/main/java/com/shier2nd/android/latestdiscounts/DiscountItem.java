@@ -6,7 +6,7 @@ import android.net.Uri;
  * Created by Woodinner on 5/30/16.
  */
 public class DiscountItem {
-    private String mChannelId;
+    private String mChannelName;
     private String mDiscountId;
     private String mPicUrl;
     private String mTitle;
@@ -18,12 +18,12 @@ public class DiscountItem {
     private String mUnworthyNum;
     private String mTimeSort;
 
-    public String getChannelId() {
-        return mChannelId;
+    public String getChannelName() {
+        return mChannelName;
     }
 
-    public void setChannelId(String channelId) {
-        mChannelId = channelId;
+    public void setChannelName(String channelName) {
+        mChannelName = channelName;
     }
 
     public String getDiscountId() {

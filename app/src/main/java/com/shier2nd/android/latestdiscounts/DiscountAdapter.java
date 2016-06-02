@@ -114,11 +114,11 @@ public class DiscountAdapter extends RecyclerView.Adapter {
         public TextView productTitle;
         public TextView productPrice;
         public TextView productMall;
-        public TextView separator;
         public TextView productDate;
         public TextView productCommentNum;
         public TextView productWorthyRate;
         public ImageView overflow;
+        public TextView productChannelName;
 
         private DiscountItem mDiscountItem;
 
@@ -137,6 +137,7 @@ public class DiscountAdapter extends RecyclerView.Adapter {
             productCommentNum = (TextView) itemView.findViewById(R.id.product_comments);
             productWorthyRate = (TextView) itemView.findViewById(R.id.product_worthy);
             overflow = (ImageView) itemView.findViewById(R.id.card_share_overflow);
+            productChannelName = (TextView) itemView.findViewById(R.id.product_channel_name);
 
             itemView.setOnClickListener(this);
             overflow.setOnClickListener(this);
@@ -157,6 +158,8 @@ public class DiscountAdapter extends RecyclerView.Adapter {
 
             productCommentNum.setText(mDiscountItem.getCommentNum());
             productWorthyRate.setText(mDiscountItem.getWorthyRate());
+
+            productChannelName.setText(mDiscountItem.getChannelName());
         }
 
         @Override
