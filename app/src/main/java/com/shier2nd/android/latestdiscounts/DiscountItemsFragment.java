@@ -120,11 +120,6 @@ public class DiscountItemsFragment extends Fragment {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 QueryPreferences.setStoredQuery(getActivity(), query);
-                /*// Collapse SearchView before updating discounts items
-                collapseSearchView(getActivity());
-                // mLastFetchedPage need to zero because it will increase with paging
-                initialUrlParam();
-                updateItemsAndSubtitle();*/
                 updateUI();
                 return true;
             }
@@ -266,7 +261,7 @@ public class DiscountItemsFragment extends Fragment {
             if (mQuery == null) {
                 return fetchr.fetchHomeDiscounts(params[0], mLastItemTimeSort);
             } else {
-                return fetchr.searchDiscounts(params[0] * 20, mQuery);
+                return fetchr.searchDiscounts((params[0] - 1) * 20, mQuery);
             }
         }
 

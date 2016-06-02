@@ -113,7 +113,9 @@ public class DiscountAdapter extends RecyclerView.Adapter {
         public ImageView productImage;
         public TextView productTitle;
         public TextView productPrice;
-        public TextView productDateAndMall;
+        public TextView productMall;
+        public TextView separator;
+        public TextView productDate;
         public TextView productCommentNum;
         public TextView productWorthyRate;
         public ImageView overflow;
@@ -130,7 +132,8 @@ public class DiscountAdapter extends RecyclerView.Adapter {
             productImage = (ImageView) itemView.findViewById(R.id.thumbnail_image);
             productTitle = (TextView) itemView.findViewById(R.id.product_title);
             productPrice = (TextView) itemView.findViewById(R.id.product_price);
-            productDateAndMall = (TextView) itemView.findViewById(R.id.product_mall_and_date);
+            productMall = (TextView) itemView.findViewById(R.id.product_mall);
+            productDate = (TextView) itemView.findViewById(R.id.product_date);
             productCommentNum = (TextView) itemView.findViewById(R.id.product_comments);
             productWorthyRate = (TextView) itemView.findViewById(R.id.product_worthy);
             overflow = (ImageView) itemView.findViewById(R.id.card_share_overflow);
@@ -149,7 +152,8 @@ public class DiscountAdapter extends RecyclerView.Adapter {
             productTitle.setText(mDiscountItem.getTitle());
             productPrice.setText(mDiscountItem.getPrice());
 
-            productDateAndMall.setText(mDiscountItem.getDateAndMall());
+            productMall.setText(mDiscountItem.getMall());
+            productDate.setText(mDiscountItem.getDate());
 
             productCommentNum.setText(mDiscountItem.getCommentNum());
             productWorthyRate.setText(mDiscountItem.getWorthyRate());

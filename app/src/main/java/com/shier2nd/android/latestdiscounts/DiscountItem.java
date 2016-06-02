@@ -106,14 +106,6 @@ public class DiscountItem {
         mTimeSort = timeSort;
     }
 
-    public String getDateAndMall() {
-        if (mMall != null && !mMall.equals("")) {
-            return mMall + " | " + mDate;
-        } else {
-            return mDate;
-        }
-    }
-
     public String getWorthyRate() {
         int worthyNum = Integer.parseInt(mWorthyNum);
         int unWorthyNum = Integer.parseInt(mUnworthyNum);

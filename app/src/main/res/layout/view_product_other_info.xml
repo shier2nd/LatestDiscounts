@@ -4,7 +4,18 @@
               style="@style/cardProductOtherInfoStyle"
               android:orientation="horizontal">
     <TextView
-        android:id="@+id/product_mall_and_date"
+        android:id="@+id/product_mall"
+        style="@style/viewProductOtherInfoTextStyle"
+        android:maxEms="6"
+        android:maxLines="1"
+        android:ellipsize="end"/>
+
+    <TextView
+        style="@style/viewProductOtherInfoTextStyle"
+        android:text="@string/separator"/>
+
+    <TextView
+        android:id="@+id/product_date"
         style="@style/viewProductOtherInfoTextStyle"/>
 
     <!-- Empty TextView -->
