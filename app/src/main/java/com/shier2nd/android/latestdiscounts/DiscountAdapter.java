@@ -20,7 +20,7 @@ import java.util.List;
  * Created by Woodinner on 5/30/16.
  */
 public class DiscountAdapter extends RecyclerView.Adapter {
-    private final int VIEW_PROG = 0;
+    private final int VIEW_PROGRESS = 0;
     private final int VIEW_ITEM = 1;
 
     private List<DiscountItem> mDiscountItems;
@@ -32,52 +32,57 @@ public class DiscountAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemViewType(int position) {
-        return mDiscountItems.get(position) != null ? VIEW_ITEM : VIEW_PROG;
+        return mDiscountItems.get(position) != null ? VIEW_ITEM : VIEW_PROGRESS;
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         mContext = parent.getContext();
 
+        View itemView;
         RecyclerView.ViewHolder viewHolder;
 
-        if (viewType == VIEW_ITEM) {
-            View itemView = LayoutInflater
-                    .from(mContext)
-                    .inflate(R.layout.card_discounts_item, parent, false);
+        switch (viewType) {
+            case VIEW_PROGRESS:
+                itemView = LayoutInflater
+                        .from(mContext)
+                        .inflate(R.layout.progressbar_load_more, parent, false);
+                viewHolder = new ProgressViewHolder(itemView);
+                break;
+            case VIEW_ITEM:
+                itemView = LayoutInflater
+                        .from(mContext)
+                        .inflate(R.layout.card_discounts_item, parent, false);
+                viewHolder = new DiscountViewHolder(itemView,
+                        new DiscountViewHolder.ClickResponseListener() {
+                            @Override
+                            public void onWholeClick(int position) {
+                                browse(mContext, position);
+                            }
 
-            viewHolder = new DiscountViewHolder(itemView,
-                    new DiscountViewHolder.ClickResponseListener() {
-                        @Override
-                        public void onWholeClick(int position) {
-                            browse(mContext, position);
-                        }
-
-                        @Override
-                        public void onOverflowClick(View v, int position) {
-                            final int pos = position;
-                            PopupMenu popup = new PopupMenu(mContext, v);
-                            MenuInflater inflater = popup.getMenuInflater();
-                            inflater.inflate(R.menu.contextual_discount_list, popup.getMenu());
-                            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                                @Override
-                                public boolean onMenuItemClick(MenuItem item) {
-                                    switch (item.getItemId()) {
-                                        case R.id.action_share_url:
-                                            share(mContext, pos);
-                                            break;
+                            @Override
+                            public void onOverflowClick(View v, int position) {
+                                final int pos = position;
+                                PopupMenu popup = new PopupMenu(mContext, v);
+                                MenuInflater inflater = popup.getMenuInflater();
+                                inflater.inflate(R.menu.contextual_discount_list, popup.getMenu());
+                                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                    @Override
+                                    public boolean onMenuItemClick(MenuItem item) {
+                                        switch (item.getItemId()) {
+                                            case R.id.action_share_url:
+                                                share(mContext, pos);
+                                                break;
+                                        }
+                                        return true;
                                     }
-                                    return true;
-                                }
-                            });
-                            popup.show();
-                        }
-                    });
-        } else {
-            View itemView = LayoutInflater
-                    .from(mContext)
-                    .inflate(R.layout.progressbar_load_more, parent, false);
-            viewHolder = new ProgressViewHolder(itemView);
+                                });
+                                popup.show();
+                            }
+                        });
+                break;
+            default:
+                viewHolder = null;
         }
 
         return viewHolder;

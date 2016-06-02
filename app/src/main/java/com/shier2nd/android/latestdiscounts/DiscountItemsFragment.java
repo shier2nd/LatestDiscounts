@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -36,6 +37,7 @@ public class DiscountItemsFragment extends Fragment {
     private SearchView mSearchView;
     private ProgressBar mProgressBar;
     private boolean mShouldShowProgressBar;
+    private boolean mIsInHomePage;
 
     public static DiscountItemsFragment newInstance() {
         return new DiscountItemsFragment();
@@ -45,11 +47,11 @@ public class DiscountItemsFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        mIsInHomePage = (QueryPreferences.getStoredQuery(getActivity()) == null);
         setHasOptionsMenu(true);
-        mLastFetchedPage = 0;
-        mLastItemTimeSort = "";
         mShouldShowProgressBar = true;
-        updateItems();
+        initialUrlParam();
+        updateItemsAndSubtitle();
     }
 
     @Nullable
@@ -77,7 +79,8 @@ public class DiscountItemsFragment extends Fragment {
 
                     if (lastItemPosition == (totalItemsNumber - 1)
                             && isScrollingUp && !mBackgroundIsLoading) {
-                        updateItems();
+                        // Update the items of new page
+                        updateItemsAndSubtitle();
                     }
                 }
             }
@@ -98,6 +101,14 @@ public class DiscountItemsFragment extends Fragment {
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Since calling setRetainInstance(true), when the screen rotation,
+        // onCreate() will not called, so should not display ProgressBar
+        mShouldShowProgressBar = false;
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_discount_items, menu);
@@ -109,11 +120,12 @@ public class DiscountItemsFragment extends Fragment {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 QueryPreferences.setStoredQuery(getActivity(), query);
-                // Collapse SearchView before updating discounts items
+                /*// Collapse SearchView before updating discounts items
                 collapseSearchView(getActivity());
                 // mLastFetchedPage need to zero because it will increase with paging
-                initialParam();
-                updateItems();
+                initialUrlParam();
+                updateItemsAndSubtitle();*/
+                updateUI();
                 return true;
             }
 
@@ -131,6 +143,9 @@ public class DiscountItemsFragment extends Fragment {
             }
         });
 
+        MenuItem clearSearch = menu.findItem(R.id.menu_item_clear);
+        clearSearch.setVisible(!mIsInHomePage);
+
         /*MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
         if (PollService.isServiceAlarmOn(getActivity())) {
             toggleItem.setTitle(R.string.stop_polling);
@@ -142,14 +157,13 @@ public class DiscountItemsFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.menu_item_refresh:
+                updateUI();
+                return true;
             case R.id.menu_item_clear:
+                // Clear the query in the Shared Preferences before updating the UI
                 QueryPreferences.setStoredQuery(getActivity(), null);
-                // if SearchView is not iconified, collapse the SearchView
-                if (!mSearchView.isIconified()) {
-                    collapseSearchView(getActivity());
-                }
-                initialParam();
-                updateItems();
+                updateUI();
                 return true;
             /*case R.id.menu_item_toggle_polling:
                 boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
@@ -162,18 +176,38 @@ public class DiscountItemsFragment extends Fragment {
         }
     }
 
-    private void updateItems() {
-        String query = QueryPreferences.getStoredQuery(getActivity());
-        new FetchItemsTask(query, this).execute(mLastFetchedPage + 1);
+    private void updateUI() {
+        // If SearchView is not iconified, collapse the SearchView
+        if (!mSearchView.isIconified()) {
+            collapseSearchView(getActivity());
+        }
+        // initialize the url parameters, and
+        // then fire the request in the background
+        initialUrlParam();
+        updateItemsAndSubtitle();
     }
 
-    private void initialParam() {
+    private void updateItemsAndSubtitle() {
+        String query = QueryPreferences.getStoredQuery(getActivity());
+        new FetchItemsTask(query, this).execute(mLastFetchedPage + 1);
+
+        String subtitle = getString(R.string.app_name);
+        if (query != null) {
+            subtitle = getString(R.string.search_subtitle_format, query);
+        }
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        if (activity.getSupportActionBar() != null){
+            activity.getSupportActionBar().setTitle(subtitle);
+        }
+    }
+
+    private void initialUrlParam() {
         mLastFetchedPage = 0;
         mLastItemTimeSort = "";
     }
 
     private void collapseSearchView(Context context) {
-        // hide the soft keyboard
+        // Hide the soft keyboard
         InputMethodManager imm = (InputMethodManager) context
                 .getSystemService(Activity.INPUT_METHOD_SERVICE);
         imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
@@ -213,6 +247,7 @@ public class DiscountItemsFragment extends Fragment {
         protected void onPreExecute() {
             mBackgroundIsLoading = true;
 
+            // Show the progress bar when you first launch the app or refresh the items
             if (mGalleryFragment.isResumed() && mLastFetchedPage == 0) {
                 mGalleryFragment.showProgressBar(true);
             }
@@ -237,13 +272,14 @@ public class DiscountItemsFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<DiscountItem> discountItems) {
-//            Log.i(TAG, "mLastFetchedPage: " + mLastFetchedPage);
             mBackgroundIsLoading = false;
 
+            // Hide the progress bar when you first launch the app or refresh the items
             if (mGalleryFragment.isResumed() && mLastFetchedPage == 0) {
                 mGalleryFragment.showProgressBar(false);
             }
 
+            // Hook the RecyclerView up to the data of discounts
             if (mLastFetchedPage++ > 0) {
                 // Remove progress item
                 mItems.remove(mItems.size() - 1);
@@ -256,12 +292,14 @@ public class DiscountItemsFragment extends Fragment {
                 setupAdapter();
             }
 
+            // Set the visibility of Clear Search menu option
+            mIsInHomePage = (mQuery == null);
+            getActivity().invalidateOptionsMenu();
+
             // Get time_sort of the last item as the param for the request url of next page
             if (discountItems.size() != 0) {
                 mLastItemTimeSort = discountItems.get(discountItems.size() - 1).getTimeSort();
             }
-            /*Log.i(TAG, "discountItems.size(): " + discountItems.size());
-            Log.i(TAG, "mLastItemTimeSort: " + mLastItemTimeSort);*/
         }
     }
 }

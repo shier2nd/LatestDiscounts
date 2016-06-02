@@ -94,14 +94,6 @@ public class SmzdmFetchr {
         Uri.Builder uriBuilder = new Uri.Builder();
 
         switch (requestUrlType) {
-            case HOME_REQUEST_URL_TYPE:
-                uriBuilder = Uri.parse(HOME_REQUEST_URL_TYPE)
-                        .buildUpon()
-                        .appendQueryParameter("limit", "20")
-                        .appendQueryParameter("have_zhuanti", "1")
-                        .appendQueryParameter("time_sort", timeSort)
-                        .appendQueryParameter("page", page);
-                break;
             case SEARCH_REQUEST_URL_TYPE:
                 uriBuilder = Uri.parse(SEARCH_REQUEST_URL_TYPE)
                         .buildUpon()
@@ -111,6 +103,13 @@ public class SmzdmFetchr {
                         .appendQueryParameter("offset", offset)
                         .appendQueryParameter("order", "");
                 break;
+            default:
+                uriBuilder = Uri.parse(HOME_REQUEST_URL_TYPE)
+                        .buildUpon()
+                        .appendQueryParameter("limit", "20")
+                        .appendQueryParameter("have_zhuanti", "1")
+                        .appendQueryParameter("time_sort", timeSort)
+                        .appendQueryParameter("page", page);
         }
 
         return  uriBuilder.appendQueryParameter("f", "android")
