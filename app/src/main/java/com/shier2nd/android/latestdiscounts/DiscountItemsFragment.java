@@ -40,7 +40,7 @@ public class DiscountItemsFragment extends Fragment {
     private ProgressBar mProgressBar;
     private boolean mShouldShowProgressBar;
     private boolean mIsInHomePage;
-    private LinearLayout mNoCrimesView;
+    private LinearLayout mNoItemsView;
     private TextView mNoResultTextView;
 
     public static DiscountItemsFragment newInstance() {
@@ -51,11 +51,15 @@ public class DiscountItemsFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        mIsInHomePage = (QueryPreferences.getStoredQuery(getActivity()) == null);
         setHasOptionsMenu(true);
+
+        mIsInHomePage = (QueryPreferences.getStoredQuery(getActivity()) == null);
         mShouldShowProgressBar = true;
+
         initialUrlParam();
-        updateItemsAndSubtitle();
+        updateItems();
+
+        PollService.setServiceAlarm(getActivity(), true);
     }
 
     @Nullable
@@ -84,7 +88,8 @@ public class DiscountItemsFragment extends Fragment {
                     if (lastItemPosition == (totalItemsNumber - 1)
                             && isScrollingUp && !mBackgroundIsLoading) {
                         // Update the items of new page
-                        updateItemsAndSubtitle();
+                        updateItems();
+
                     }
                 }
             }
@@ -101,8 +106,11 @@ public class DiscountItemsFragment extends Fragment {
 
         setupAdapter();
 
-        mNoCrimesView = (LinearLayout) v.findViewById(R.id.no_items_view);
+        mNoItemsView = (LinearLayout) v.findViewById(R.id.no_items_view);
         mNoResultTextView = (TextView) v.findViewById(R.id.no_result_text_view);
+        showItemsView(QueryPreferences.getStoredQuery(getActivity()));
+
+        updateSubtitle(QueryPreferences.getStoredQuery(getActivity()));
 
         return v;
     }
@@ -137,6 +145,8 @@ public class DiscountItemsFragment extends Fragment {
             }
         });
 
+        // Pre-populate the search text box with the saved query when
+        // you presses on the search icon to expand the SearchView
         mSearchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -148,12 +158,12 @@ public class DiscountItemsFragment extends Fragment {
         MenuItem clearSearch = menu.findItem(R.id.menu_item_clear);
         clearSearch.setVisible(!mIsInHomePage);
 
-        /*MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
         if (PollService.isServiceAlarmOn(getActivity())) {
             toggleItem.setTitle(R.string.stop_polling);
         } else {
             toggleItem.setTitle(R.string.start_polling);
-        }*/
+        }
     }
 
     @Override
@@ -167,12 +177,12 @@ public class DiscountItemsFragment extends Fragment {
                 QueryPreferences.setStoredQuery(getActivity(), null);
                 updateUI();
                 return true;
-            /*case R.id.menu_item_toggle_polling:
+            case R.id.menu_item_toggle_polling:
                 boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
                 PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
-                // tell PhotoGalleryActivity to update its toolbar options menu
+                // Tell LatestDiscounts Activity to update its toolbar options menu
                 getActivity().invalidateOptionsMenu();
-                return true;*/
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -186,13 +196,17 @@ public class DiscountItemsFragment extends Fragment {
         // initialize the url parameters, and
         // then fire the request in the background
         initialUrlParam();
-        updateItemsAndSubtitle();
+        updateItems();
+
+        updateSubtitle(QueryPreferences.getStoredQuery(getActivity()));
     }
 
-    private void updateItemsAndSubtitle() {
+    private void updateItems() {
         String query = QueryPreferences.getStoredQuery(getActivity());
         new FetchItemsTask(query, this).execute(mLastFetchedPage + 1);
+    }
 
+    private void updateSubtitle(String query) {
         String subtitle = getString(R.string.app_name);
         if (query != null) {
             subtitle = getString(R.string.search_subtitle_format, query);
@@ -228,10 +242,23 @@ public class DiscountItemsFragment extends Fragment {
         }
     }
 
-
     private void setupAdapter() {
         if (isAdded()) {
             mDiscountRecyclerView.setAdapter(new DiscountAdapter(mItems));
+        }
+    }
+
+    private void showItemsView(String query) {
+        // If there is no matched search result, display no_items_view
+        // after completing the background task
+        if (!mBackgroundIsLoading && mItems.size() < 1) {
+            String noResultText = getString(R.string.no_result, query);
+            mNoResultTextView.setText(noResultText);
+            mNoItemsView.setVisibility(View.VISIBLE);
+            mDiscountRecyclerView.setVisibility(View.INVISIBLE);
+        } else {
+            mNoItemsView.setVisibility(View.INVISIBLE);
+            mDiscountRecyclerView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -243,7 +270,6 @@ public class DiscountItemsFragment extends Fragment {
             mQuery = query;
             mGalleryFragment = fragment;
         }
-
 
         @Override
         protected void onPreExecute() {
@@ -263,12 +289,10 @@ public class DiscountItemsFragment extends Fragment {
 
         @Override
         protected List<DiscountItem> doInBackground(Integer... params) {
-            SmzdmFetchr fetchr = new SmzdmFetchr();
-
             if (mQuery == null) {
-                return fetchr.fetchHomeDiscounts(params[0], mLastItemTimeSort);
+                return new SmzdmFetchr().fetchHomeDiscounts(params[0], mLastItemTimeSort);
             } else {
-                return fetchr.searchDiscounts((params[0] - 1) * 20, mQuery);
+                return new SmzdmFetchr().searchDiscounts((params[0] - 1) * 20, mQuery);
             }
         }
 
@@ -292,10 +316,15 @@ public class DiscountItemsFragment extends Fragment {
             } else {
                 mItems = discountItems;
                 setupAdapter();
+
+                if (discountItems.size() != 0) {
+                    QueryPreferences.setLastResultId(getActivity(),
+                            new SmzdmFetchr().getLatestResultId(mQuery, discountItems));
+                }
             }
 
             // Get time_sort of the last item as the param for the request url of next page
-            if (discountItems.size() != 0) {
+            if (mQuery == null && discountItems.size() != 0) {
                 mLastItemTimeSort = discountItems.get(discountItems.size() - 1).getTimeSort();
             }
 
@@ -303,16 +332,7 @@ public class DiscountItemsFragment extends Fragment {
             mIsInHomePage = (mQuery == null);
             getActivity().invalidateOptionsMenu();
 
-            // If there is no matched search result, display no_items_view
-            if (mItems.size() < 1) {
-                String noResultText = getString(R.string.no_result, mQuery);
-                mNoResultTextView.setText(noResultText);
-                mNoCrimesView.setVisibility(View.VISIBLE);
-                mDiscountRecyclerView.setVisibility(View.INVISIBLE);
-            } else {
-                mNoCrimesView.setVisibility(View.INVISIBLE);
-                mDiscountRecyclerView.setVisibility(View.VISIBLE);
-            }
+            showItemsView(mQuery);
         }
     }
 }

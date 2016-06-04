@@ -17,6 +17,7 @@ public class DiscountItem {
     private String mWorthyNum;
     private String mUnworthyNum;
     private String mTimeSort;
+    private String mDiscountTop;
 
     public String getChannelName() {
         return mChannelName;
@@ -104,6 +105,14 @@ public class DiscountItem {
 
     public void setTimeSort(String timeSort) {
         mTimeSort = timeSort;
+    }
+
+    public String getDiscountTop() {
+        return mDiscountTop;
+    }
+
+    public void setDiscountTop(String discountTop) {
+        mDiscountTop = discountTop;
     }
 
     public String getWorthyRate() {

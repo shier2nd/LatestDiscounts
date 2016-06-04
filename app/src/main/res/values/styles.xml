@@ -80,7 +80,7 @@
 
     <style name="viewProductOtherInfoTextStyle" parent="baseViewProductOtherInfoStyle">
         <item name="android:textSize">10sp</item>
-        <item name="android:textColor">@android:color/darker_gray</item>
+        <item name="android:textColor">@color/colorTextIconGray</item>
     </style>
 
     <style name="viewProductOtherInfoImageStyle" parent="baseViewProductOtherInfoStyle">

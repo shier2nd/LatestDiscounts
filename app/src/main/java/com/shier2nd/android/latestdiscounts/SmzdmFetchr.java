@@ -32,7 +32,7 @@ public class SmzdmFetchr {
     private static final String HOME_REQUEST_URL_TYPE = "https://api.smzdm.com/v1/home/articles/";
     private static final String SEARCH_REQUEST_URL_TYPE = "https://api.smzdm.com/v2/search";
 
-    public byte[] getUrlBytes(String urlSpec) throws IOException {
+    private byte[] getUrlBytes(String urlSpec) throws IOException {
         URL url = new URL(urlSpec);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
@@ -46,7 +46,7 @@ public class SmzdmFetchr {
                         urlSpec);
             }
 
-            int bytesRead = 0;
+            int bytesRead;
             byte[] buffer = new byte[1024];
             while ((bytesRead = in.read(buffer)) > 0) {
                 out.write(buffer, 0, bytesRead);
@@ -58,7 +58,7 @@ public class SmzdmFetchr {
         }
     }
 
-    public String getUrlString(String urlSpec) throws IOException {
+    private String getUrlString(String urlSpec) throws IOException {
         return new String(getUrlBytes(urlSpec));
     }
 
@@ -74,7 +74,38 @@ public class SmzdmFetchr {
         return downloadDiscountItems(url);
     }
 
-    public List<DiscountItem> downloadDiscountItems(String url) {
+    // Get the latest result ID of the parsed JSON
+    public String getLatestResultId(String query, List<DiscountItem> items) {
+        if (items.size() > 0) {
+            String latestResultId = items.get(0).getDiscountId();
+            if (query == null) {
+                // 首页返回的数据，非置顶文章按时间顺序排序，故如此筛选可获取最新文章
+                for (int i = 0; i < items.size(); i++) {
+                    if (items.get(i).getDiscountTop().equals("0")) {
+                        latestResultId = items.get(i).getDiscountId();
+                        break;
+                    }
+                }
+            } else {
+                // 搜索返回的数据，文章不完全按时间顺序排序，故利用如此循环对比的方法
+                // 来获取最新时间的文章ID。
+                // 注：这种方法并不保证获取到的文章绝对最新，因为
+                // 第一、文章ID数字最大有时并不意味着发布的时间最新
+                // 第二、只遍历了搜索请求返回的前20个以内的文章数据
+                for (int i = 1; i < items.size(); i++) {
+                    if (latestResultId.compareTo(items.get(i).getDiscountId()) < 0) {
+                        latestResultId = items.get(i).getDiscountId();
+                    }
+                }
+            }
+            Log.i(TAG, "Now the last result is: " + latestResultId);
+            return latestResultId;
+        } else {
+            return null;
+        }
+    }
+
+    private List<DiscountItem> downloadDiscountItems(String url) {
 
         List<DiscountItem> items = new ArrayList<>();
 
@@ -91,8 +122,8 @@ public class SmzdmFetchr {
     private String buildUrl(String requestUrlType,
                             String page, String timeSort,
                             String query, String offset) {
-        Uri.Builder uriBuilder = new Uri.Builder();
 
+        Uri.Builder uriBuilder;
         switch (requestUrlType) {
             case SEARCH_REQUEST_URL_TYPE:
                 uriBuilder = Uri.parse(SEARCH_REQUEST_URL_TYPE)
@@ -182,6 +213,8 @@ public class SmzdmFetchr {
                     return "article_unworthy";
                 case "mTimeSort":
                     return "time_sort";
+                case "mDiscountTop":
+                    return "article_top";
                 default:
                     return f.getName();
             }

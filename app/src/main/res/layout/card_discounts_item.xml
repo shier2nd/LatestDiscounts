@@ -40,6 +40,7 @@
         <TextView
             android:id="@+id/product_channel_name"
             style="@style/viewProductOtherInfoTextStyle"
+            android:textColor="@color/colorTextGray"
             android:background="@drawable/tag_channel_name"/>
     </RelativeLayout>
 </android.support.v7.widget.CardView>
