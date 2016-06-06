@@ -65,8 +65,6 @@ public class PollService extends IntentService {
         }
 
         String query = QueryPreferences.getStoredQuery(this);
-        // Remember the latest result ID before polling
-        String latestResultId = QueryPreferences.getLastResultId(this);
         List<DiscountItem> items;
 
         if (query == null) {
@@ -79,6 +77,8 @@ public class PollService extends IntentService {
             return;
         }
 
+        // Remember the latest result ID before polling
+        String latestResultId = QueryPreferences.getLastResultId(this);
         String newLatestResultId = new SmzdmFetchr().getLatestResultId(query, items);
 
         // The new latest result ID may not equal to the old one when you Clear Search

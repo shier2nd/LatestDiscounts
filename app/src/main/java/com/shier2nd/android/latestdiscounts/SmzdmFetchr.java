@@ -98,7 +98,6 @@ public class SmzdmFetchr {
                     }
                 }
             }
-            Log.i(TAG, "Now the last result is: " + latestResultId);
             return latestResultId;
         } else {
             return null;

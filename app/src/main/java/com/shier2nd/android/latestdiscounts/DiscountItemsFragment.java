@@ -1,8 +1,13 @@
 package com.shier2nd.android.latestdiscounts;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,12 +15,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -58,8 +65,6 @@ public class DiscountItemsFragment extends Fragment {
 
         initialUrlParam();
         updateItems();
-
-        PollService.setServiceAlarm(getActivity(), true);
     }
 
     @Nullable
@@ -131,6 +136,10 @@ public class DiscountItemsFragment extends Fragment {
         MenuItem searchItem = menu.findItem(R.id.menu_item_search);
         mSearchView = (SearchView) searchItem.getActionView();
 
+        // Avoid having fullscreen keyboard editing on landscape
+        int options = mSearchView.getImeOptions();
+        mSearchView.setImeOptions(options | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -159,10 +168,19 @@ public class DiscountItemsFragment extends Fragment {
         clearSearch.setVisible(!mIsInHomePage);
 
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
-        if (PollService.isServiceAlarmOn(getActivity())) {
-            toggleItem.setTitle(R.string.stop_polling);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            if (PollService.isServiceAlarmOn(getActivity())) {
+                toggleItem.setTitle(R.string.stop_polling);
+            } else {
+                toggleItem.setTitle(R.string.start_polling);
+            }
         } else {
-            toggleItem.setTitle(R.string.start_polling);
+            final int JOB_ID = 1;
+            if (isBeenScheduled(JOB_ID)) {
+                toggleItem.setTitle(R.string.stop_polling);
+            } else {
+                toggleItem.setTitle(R.string.start_polling);
+            }
         }
     }
 
@@ -178,14 +196,47 @@ public class DiscountItemsFragment extends Fragment {
                 updateUI();
                 return true;
             case R.id.menu_item_toggle_polling:
-                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
-                // Tell LatestDiscounts Activity to update its toolbar options menu
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                    PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                } else {
+                    JobScheduler scheduler = (JobScheduler)
+                            getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                    final int JOB_ID = 1;
+
+                    if (isBeenScheduled(JOB_ID)){
+                        Log.i(TAG, "scheduler.cancel(JOB_ID)");
+                        scheduler.cancel(JOB_ID);
+                    } else{
+                        Log.i(TAG, "scheduler.schedule(jobInfo)");
+                        JobInfo jobInfo = new JobInfo.Builder(
+                                JOB_ID, new ComponentName(getActivity(), PollJobService.class))
+                                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                                .setPeriodic(1000 * 60)
+                                .setPersisted(true)
+                                .build();
+                        scheduler.schedule(jobInfo);
+                    }
+                }
+                // Tell DiscountItemActivity to update its toolbar options menu
                 getActivity().invalidateOptionsMenu();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @TargetApi(21)
+    private boolean isBeenScheduled(int JOB_ID){
+        JobScheduler scheduler = (JobScheduler)
+                getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        boolean hasBeenScheduled = false;
+        for (JobInfo jobInfo : scheduler.getAllPendingJobs()){
+            if (jobInfo.getId() == JOB_ID) {
+                hasBeenScheduled = true;
+            }
+        }
+        return hasBeenScheduled;
     }
 
     private void updateUI() {
