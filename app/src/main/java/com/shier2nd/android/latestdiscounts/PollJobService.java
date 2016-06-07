@@ -20,6 +20,7 @@ import java.util.List;
 @TargetApi(21)
 public class PollJobService extends JobService {
     private static final String TAG = "PollJobService";
+
     private PollTask mCurrentTask;
 
     public static final String ACTION_SHOW_NOTIFICATION =
@@ -101,7 +102,7 @@ public class PollJobService extends JobService {
 
                 Log.i(TAG, "Got a new result: " + newResultId);
             } else {
-                Log.i(TAG, "Got an old result:" + newResultId);
+                Log.i(TAG, "Got an old result: " + newResultId);
             }
         }
     }

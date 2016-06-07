@@ -18,6 +18,7 @@ public abstract class VisibleFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        Log.i(TAG, "onStart");
         IntentFilter filter = new IntentFilter(PollService.ACTION_SHOW_NOTIFICATION);
         getActivity().registerReceiver(mOnShowNotification, filter,
                 PollService.PERM_PRIVATE, null);
@@ -26,6 +27,7 @@ public abstract class VisibleFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
+        Log.i(TAG, "onStop");
         getActivity().unregisterReceiver(mOnShowNotification);
     }
 
@@ -36,7 +38,7 @@ public abstract class VisibleFragment extends Fragment {
             Log.i(TAG, "canceling notification");
             setResultCode(Activity.RESULT_CANCELED);
 
-            Toast.makeText(getActivity(), "Got a new discount", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), R.string.new_products_toast, Toast.LENGTH_LONG).show();
         }
     };
 }

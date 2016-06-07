@@ -111,7 +111,7 @@ public class PollService extends IntentService {
 
             Log.i(TAG, "Got a new result: " + newResultId);
         } else {
-            Log.i(TAG, "Got an old result:" + newResultId);
+            Log.i(TAG, "Got an old result: " + newResultId);
         }
     }
 

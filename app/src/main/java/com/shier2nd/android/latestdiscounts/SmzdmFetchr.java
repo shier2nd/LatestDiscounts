@@ -106,30 +106,20 @@ public class SmzdmFetchr {
         for (int i = 1; i < items.size(); i++) {
             boolean isToday = (item.getDate().charAt(2) == ':');
             if (isToday) {
-                if (items.get(i).getDate().charAt(2) != ':') {
-                    break;
-                } else {
-                    if (item.getDate().compareTo(items.get(i).getDate()) < 0) {
-                        item = items.get(i);
-                    }
+                if (items.get(i).getDate().charAt(2) == ':' &&
+                        item.getDate().compareTo(items.get(i).getDate()) < 0) {
+                    item = items.get(i);
                 }
             } else if (item.getDate().length() == 5) {
-                if (items.get(i).getDate().length() == 8) {
-                    break;
-                } else if (items.get(i).getDate().charAt(2) == ':') {
+                if (items.get(i).getDate().charAt(2) == ':' ||
+                        (items.get(i).getDate().charAt(2) == '-' &&
+                         item.getDate().compareTo(items.get(i).getDate()) < 0)) {
                     item = items.get(i);
-                } else if (items.get(i).getDate().charAt(2) == '-') {
-                    if (item.getDate().compareTo(items.get(i).getDate()) < 0) {
-                        item = items.get(i);
-                    }
                 }
             } else if (item.getDate().length() == 8) {
-                if (items.get(i).getDate().length() == 5) {
+                if (items.get(i).getDate().length() == 5 ||
+                        item.getDate().compareTo(items.get(i).getDate()) < 0) {
                     item = items.get(i);
-                } else {
-                    if (item.getDate().compareTo(items.get(i).getDate()) < 0) {
-                        item = items.get(i);
-                    }
                 }
             }
         }
