@@ -87,21 +87,53 @@ public class SmzdmFetchr {
                     }
                 }
             } else {
-                // 搜索返回的数据，文章不完全按时间顺序排序，故利用如此循环对比的方法
-                // 来获取最新时间的文章ID。
-                // 注：这种方法并不保证获取到的文章绝对最新，因为
-                // 第一、文章ID数字最大有时并不意味着发布的时间最新
-                // 第二、只遍历了搜索请求返回的前20个以内的文章数据
-                for (int i = 1; i < items.size(); i++) {
-                    if (latestResultId.compareTo(items.get(i).getDiscountId()) < 0) {
-                        latestResultId = items.get(i).getDiscountId();
-                    }
-                }
+                // 搜索返回的数据，文章不完全按时间顺序排序，故先获取队列中最新时间的文章
+                DiscountItem item = getLatestItemByDate(items);
+                latestResultId = item.getDiscountId();
             }
             return latestResultId;
         } else {
             return null;
         }
+    }
+
+    // 循环对比队列元素的时间属性，以获取最新时间的文章ID。
+    // 注：这种方法并不保证获取到的文章绝对最新，因为：
+    // 第一、只遍历了搜索请求返回的前20个以内的文章数据
+    // 第二、若前20个以内的文章都不属于今日发布的文章则无法精确对比时间
+    private DiscountItem getLatestItemByDate(List<DiscountItem> items) {
+        DiscountItem item = items.get(0);
+        for (int i = 1; i < items.size(); i++) {
+            boolean isToday = (item.getDate().charAt(2) == ':');
+            if (isToday) {
+                if (items.get(i).getDate().charAt(2) != ':') {
+                    break;
+                } else {
+                    if (item.getDate().compareTo(items.get(i).getDate()) < 0) {
+                        item = items.get(i);
+                    }
+                }
+            } else if (item.getDate().length() == 5) {
+                if (items.get(i).getDate().length() == 8) {
+                    break;
+                } else if (items.get(i).getDate().charAt(2) == ':') {
+                    item = items.get(i);
+                } else if (items.get(i).getDate().charAt(2) == '-') {
+                    if (item.getDate().compareTo(items.get(i).getDate()) < 0) {
+                        item = items.get(i);
+                    }
+                }
+            } else if (item.getDate().length() == 8) {
+                if (items.get(i).getDate().length() == 5) {
+                    item = items.get(i);
+                } else {
+                    if (item.getDate().compareTo(items.get(i).getDate()) < 0) {
+                        item = items.get(i);
+                    }
+                }
+            }
+        }
+        return item;
     }
 
     private List<DiscountItem> downloadDiscountItems(String url) {

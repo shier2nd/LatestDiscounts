@@ -10,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -34,7 +33,7 @@ import java.util.List;
 /**
  * Created by Woodinner on 5/27/16.
  */
-public class DiscountItemsFragment extends Fragment {
+public class DiscountItemsFragment extends VisibleFragment {
 
     private static final String TAG = "DiscountItemsFragment";
 
@@ -168,6 +167,31 @@ public class DiscountItemsFragment extends Fragment {
         clearSearch.setVisible(!mIsInHomePage);
 
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
+        setToggleItemTitleByVersion(toggleItem);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_refresh:
+                updateUI();
+                return true;
+            case R.id.menu_item_clear:
+                // Clear the query in the Shared Preferences before updating the UI
+                QueryPreferences.setStoredQuery(getActivity(), null);
+                updateUI();
+                return true;
+            case R.id.menu_item_toggle_polling:
+                startPollingByVersion();
+                // Tell DiscountItemActivity to update its toolbar options menu
+                getActivity().invalidateOptionsMenu();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void setToggleItemTitleByVersion(MenuItem toggleItem) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             if (PollService.isServiceAlarmOn(getActivity())) {
                 toggleItem.setTitle(R.string.stop_polling);
@@ -184,45 +208,28 @@ public class DiscountItemsFragment extends Fragment {
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_item_refresh:
-                updateUI();
-                return true;
-            case R.id.menu_item_clear:
-                // Clear the query in the Shared Preferences before updating the UI
-                QueryPreferences.setStoredQuery(getActivity(), null);
-                updateUI();
-                return true;
-            case R.id.menu_item_toggle_polling:
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-                    PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
-                } else {
-                    JobScheduler scheduler = (JobScheduler)
-                            getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-                    final int JOB_ID = 1;
+    private void startPollingByVersion() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+            PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+        } else {
+            JobScheduler scheduler = (JobScheduler)
+                    getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+            final int JOB_ID = 1;
 
-                    if (isBeenScheduled(JOB_ID)){
-                        Log.i(TAG, "scheduler.cancel(JOB_ID)");
-                        scheduler.cancel(JOB_ID);
-                    } else{
-                        Log.i(TAG, "scheduler.schedule(jobInfo)");
-                        JobInfo jobInfo = new JobInfo.Builder(
-                                JOB_ID, new ComponentName(getActivity(), PollJobService.class))
-                                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                                .setPeriodic(1000 * 60)
-                                .setPersisted(true)
-                                .build();
-                        scheduler.schedule(jobInfo);
-                    }
-                }
-                // Tell DiscountItemActivity to update its toolbar options menu
-                getActivity().invalidateOptionsMenu();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            if (isBeenScheduled(JOB_ID)){
+                Log.i(TAG, "scheduler.cancel(JOB_ID)");
+                scheduler.cancel(JOB_ID);
+            } else{
+                Log.i(TAG, "scheduler.schedule(jobInfo)");
+                JobInfo jobInfo = new JobInfo.Builder(
+                        JOB_ID, new ComponentName(getActivity(), PollJobService.class))
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .setPeriodic(1000 * 60)
+                        .setPersisted(true)
+                        .build();
+                scheduler.schedule(jobInfo);
+            }
         }
     }
 

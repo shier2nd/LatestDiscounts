@@ -1,6 +1,7 @@
 package com.shier2nd.android.latestdiscounts;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.job.JobParameters;
@@ -8,7 +9,6 @@ import android.app.job.JobService;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.AsyncTask;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
@@ -21,6 +21,13 @@ import java.util.List;
 public class PollJobService extends JobService {
     private static final String TAG = "PollJobService";
     private PollTask mCurrentTask;
+
+    public static final String ACTION_SHOW_NOTIFICATION =
+            "com.shier2nd.android.latestdiscounts.SHOW_NOTIFICATION";
+    public static final String PERM_PRIVATE =
+            "com.shier2nd.android.latestdiscounts.PRIVATE";
+    public static final String REQUEST_CODE = "REQUSET_CODE";
+    public static final String NOTIFICATION = "NOTIFICATION";
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -39,9 +46,11 @@ public class PollJobService extends JobService {
 
     private class PollTask extends AsyncTask<JobParameters, Void, List<DiscountItem>> {
         private String mQuery;
+        private String mResultIdBeforePolling;
 
         public PollTask() {
             mQuery = QueryPreferences.getStoredQuery(PollJobService.this);
+            mResultIdBeforePolling = QueryPreferences.getLastResultId(PollJobService.this);
         }
 
         @Override
@@ -69,12 +78,9 @@ public class PollJobService extends JobService {
                 return;
             }
 
-            String latestResultId = QueryPreferences.getLastResultId(PollJobService.this);
-            String newLatestResultId = new SmzdmFetchr().getLatestResultId(mQuery, items);
+            String newResultId = new SmzdmFetchr().getLatestResultId(mQuery, items);
 
-            // The new latest result ID may not equal to the old one when you Clear Search
-            if (!newLatestResultId.equals(latestResultId)
-                    && newLatestResultId.compareTo(latestResultId) > 0) {
+            if (!newResultId.equals(mResultIdBeforePolling)) {
 
                 Resources resources = getResources();
                 Intent i = DiscountItemsActivity.newIntent(PollJobService.this);
@@ -89,18 +95,23 @@ public class PollJobService extends JobService {
                         .setAutoCancel(true)
                         .build();
 
-                NotificationManagerCompat notificationManager =
-                        NotificationManagerCompat.from(PollJobService.this);
-                notificationManager.notify(0, notification);
-            /*showBackgroundNotification(0, notification);*/
+                showBackgroundNotification(0, notification);
 
-                QueryPreferences.setLastResultId(PollJobService.this, newLatestResultId);
+                QueryPreferences.setLastResultId(PollJobService.this, newResultId);
 
-                Log.i(TAG, "Got a new result: " + newLatestResultId);
+                Log.i(TAG, "Got a new result: " + newResultId);
             } else {
-                Log.i(TAG, "Got an old result:" + newLatestResultId);
+                Log.i(TAG, "Got an old result:" + newResultId);
             }
         }
+    }
+
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+        Intent i = new Intent(ACTION_SHOW_NOTIFICATION);
+        i.putExtra(REQUEST_CODE, requestCode);
+        i.putExtra(NOTIFICATION, notification);
+        sendOrderedBroadcast(i, PERM_PRIVATE, null, null,
+                Activity.RESULT_OK, null, null);
     }
 
 }

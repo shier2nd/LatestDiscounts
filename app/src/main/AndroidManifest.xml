@@ -2,9 +2,13 @@
 <manifest package="com.shier2nd.android.latestdiscounts"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <permission android:name="com.shier2nd.android.latestdiscounts.PRIVATE"
+                android:protectionLevel="signature" />
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="com.shier2nd.android.latestdiscounts.PRIVATE" />
 
     <application
         android:allowBackup="true"
@@ -19,11 +23,26 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
         <service android:name=".PollService" />
         <service
             android:name=".PollJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true"/>
+
+        <receiver android:name=".StartupReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".NotificationReceiver"
+                  android:exported="false">
+            <intent-filter
+                android:priority="-999">
+                <action
+                    android:name="com.shier2nd.android.latestdiscounts.SHOW_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

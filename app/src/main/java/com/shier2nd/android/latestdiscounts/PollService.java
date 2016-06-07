@@ -1,5 +1,6 @@
 package com.shier2nd.android.latestdiscounts;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
@@ -9,8 +10,8 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.os.SystemClock;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.NotificationCompat;
+import android.util.Log;
 
 import java.util.List;
 
@@ -22,6 +23,13 @@ public class PollService extends IntentService {
 
     private static final int POLL_INTERVAL = 1000 * 60;
 //    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+
+    public static final String ACTION_SHOW_NOTIFICATION =
+            "com.shier2nd.android.latestdiscounts.SHOW_NOTIFICATION";
+    public static final String PERM_PRIVATE =
+            "com.shier2nd.android.latestdiscounts.PRIVATE";
+    public static final String REQUEST_CODE = "REQUSET_CODE";
+    public static final String NOTIFICATION = "NOTIFICATION";
 
     // Any component that wants to start this service should use this method
     public static Intent newIntent(Context context) {
@@ -43,7 +51,7 @@ public class PollService extends IntentService {
             pi.cancel();
         }
 
-        /*QueryPreferences.setAlarmOn(context, isOn);*/
+        QueryPreferences.setAlarmOn(context, isOn);
     }
 
     // Check whether that PendingIntent exists or not to see whether the alarm is active or not
@@ -64,6 +72,9 @@ public class PollService extends IntentService {
             return;
         }
 
+        // Remember the result ID before polling
+        String resultIdBeforePolling = QueryPreferences.getLastResultId(this);
+
         String query = QueryPreferences.getStoredQuery(this);
         List<DiscountItem> items;
 
@@ -77,13 +88,9 @@ public class PollService extends IntentService {
             return;
         }
 
-        // Remember the latest result ID before polling
-        String latestResultId = QueryPreferences.getLastResultId(this);
-        String newLatestResultId = new SmzdmFetchr().getLatestResultId(query, items);
+        String newResultId = new SmzdmFetchr().getLatestResultId(query, items);
 
-        // The new latest result ID may not equal to the old one when you Clear Search
-        if (!newLatestResultId.equals(latestResultId)
-                && newLatestResultId.compareTo(latestResultId) > 0) {
+        if (!newResultId.equals(resultIdBeforePolling)) {
 
             Resources resources = getResources();
             Intent i = DiscountItemsActivity.newIntent(this);
@@ -98,13 +105,22 @@ public class PollService extends IntentService {
                     .setAutoCancel(true)
                     .build();
 
-            NotificationManagerCompat notificationManager =
-                    NotificationManagerCompat.from(this);
-            notificationManager.notify(0, notification);
-            /*showBackgroundNotification(0, notification);*/
+            showBackgroundNotification(0, notification);
 
-            QueryPreferences.setLastResultId(this, newLatestResultId);
+            QueryPreferences.setLastResultId(this, newResultId);
+
+            Log.i(TAG, "Got a new result: " + newResultId);
+        } else {
+            Log.i(TAG, "Got an old result:" + newResultId);
         }
+    }
+
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+        Intent i = new Intent(ACTION_SHOW_NOTIFICATION);
+        i.putExtra(REQUEST_CODE, requestCode);
+        i.putExtra(NOTIFICATION, notification);
+        sendOrderedBroadcast(i, PERM_PRIVATE, null, null,
+                Activity.RESULT_OK, null, null);
     }
 
     private boolean isNetworkAvailableAndConnected() {
