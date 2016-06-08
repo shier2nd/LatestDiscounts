@@ -10,6 +10,7 @@ public class QueryPreferences {
     private static final String PREF_SEARCH_QUERY = "searchQuery";
     private static final String PREF_LAST_RESULT_ID = "lastResultId";
     private static final String PREF_IS_ALARM_ON = "isAlarmOn";
+    private static final String PREF_POLL_INTERVAL = "pollInterval";
 
     public static String getStoredQuery(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
@@ -44,6 +45,18 @@ public class QueryPreferences {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putBoolean(PREF_IS_ALARM_ON, isOn)
+                .apply();
+    }
+
+    public static int getPollInterval(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getInt(PREF_POLL_INTERVAL, 60000);
+    }
+
+    public static void setPollInterval(Context context, int interval) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putInt(PREF_POLL_INTERVAL, interval)
                 .apply();
     }
 }

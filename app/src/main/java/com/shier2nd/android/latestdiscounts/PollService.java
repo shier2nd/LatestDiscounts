@@ -21,8 +21,8 @@ import java.util.List;
 public class PollService extends IntentService {
     private static final String TAG = "PollService";
 
-    private static final int POLL_INTERVAL = 1000 * 60;
-//    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
+//    private static final int POLL_INTERVAL = 1000 * 60;
+    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
 
     public static final String ACTION_SHOW_NOTIFICATION =
             "com.shier2nd.android.latestdiscounts.SHOW_NOTIFICATION";
@@ -60,6 +60,11 @@ public class PollService extends IntentService {
         PendingIntent pi = PendingIntent
                 .getService(context, 0, i, PendingIntent.FLAG_NO_CREATE);
         return pi != null;
+    }
+
+    public static void startPolling(Context context) {
+        boolean shouldStartAlarm = !isServiceAlarmOn(context);
+        PollService.setServiceAlarm(context, shouldStartAlarm);
     }
 
     public PollService() {

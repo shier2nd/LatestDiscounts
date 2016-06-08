@@ -23,6 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".SettingsActivity"
+            android:parentActivityName=".DiscountItemsActivity"/>
 
         <service android:name=".PollService" />
         <service

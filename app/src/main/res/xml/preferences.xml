@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <ListPreference
+        android:key="pref_key_poll_interval"
+        android:title="@string/pref_title_poll_interval"
+        android:summary="@string/pref_choose_poll_interval"
+        android:dialogTitle="@string/pref_choose_poll_interval"
+        android:entries="@array/pref_poll_interval_list_titles"
+        android:entryValues="@array/pref_poll_interval_list_value"/>
+
+</PreferenceScreen>

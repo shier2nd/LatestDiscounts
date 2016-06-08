@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="pref_poll_interval_list_titles">
+        <item>@string/pref_1_minute_poll_interval</item>
+        <item>@string/pref_5_minutes_poll_interval</item>
+        <item>@string/pref_15_minutes_poll_interval</item>
+        <item>@string/pref_30_minutes_poll_interval</item>
+        <item>@string/pref_1_hour_poll_interval</item>
+    </string-array>
+
+    <string-array name="pref_poll_interval_list_value">
+        <item>60000</item>
+        <item>300000</item>
+        <item>900000</item>
+        <item>1800000</item>
+        <item>3600000</item>
+    </string-array>
+</resources>

@@ -1,11 +1,8 @@
 package com.shier2nd.android.latestdiscounts;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
-import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,7 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -186,6 +182,10 @@ public class DiscountItemsFragment extends VisibleFragment {
                 // Tell DiscountItemActivity to update its toolbar options menu
                 getActivity().invalidateOptionsMenu();
                 return true;
+            case R.id.menu_item_settings:
+                Intent i = new Intent(getActivity(), SettingsActivity.class);
+                startActivity(i);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -200,7 +200,7 @@ public class DiscountItemsFragment extends VisibleFragment {
             }
         } else {
             final int JOB_ID = 1;
-            if (isBeenScheduled(JOB_ID)) {
+            if (PollJobService.isBeenScheduled(JOB_ID, getActivity())) {
                 toggleItem.setTitle(R.string.stop_polling);
             } else {
                 toggleItem.setTitle(R.string.start_polling);
@@ -210,40 +210,10 @@ public class DiscountItemsFragment extends VisibleFragment {
 
     private void startPollingByVersion() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-            PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+            PollService.startPolling(getActivity());
         } else {
-            JobScheduler scheduler = (JobScheduler)
-                    getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-            final int JOB_ID = 1;
-
-            if (isBeenScheduled(JOB_ID)){
-                Log.i(TAG, "scheduler.cancel(JOB_ID)");
-                scheduler.cancel(JOB_ID);
-            } else{
-                Log.i(TAG, "scheduler.schedule(jobInfo)");
-                JobInfo jobInfo = new JobInfo.Builder(
-                        JOB_ID, new ComponentName(getActivity(), PollJobService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                        .setPeriodic(1000 * 60)
-                        .setPersisted(true)
-                        .build();
-                scheduler.schedule(jobInfo);
-            }
+            PollJobService.startPolling(getActivity());
         }
-    }
-
-    @TargetApi(21)
-    private boolean isBeenScheduled(int JOB_ID){
-        JobScheduler scheduler = (JobScheduler)
-                getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        boolean hasBeenScheduled = false;
-        for (JobInfo jobInfo : scheduler.getAllPendingJobs()){
-            if (jobInfo.getId() == JOB_ID) {
-                hasBeenScheduled = true;
-            }
-        }
-        return hasBeenScheduled;
     }
 
     private void updateUI() {

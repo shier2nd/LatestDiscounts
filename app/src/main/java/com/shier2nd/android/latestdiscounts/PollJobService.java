@@ -4,8 +4,12 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.app.job.JobInfo;
 import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
 import android.app.job.JobService;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.AsyncTask;
@@ -29,6 +33,42 @@ public class PollJobService extends JobService {
             "com.shier2nd.android.latestdiscounts.PRIVATE";
     public static final String REQUEST_CODE = "REQUSET_CODE";
     public static final String NOTIFICATION = "NOTIFICATION";
+
+    @TargetApi(21)
+    public static void startPolling(Context context) {
+        JobScheduler scheduler = (JobScheduler)
+                context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        final int JOB_ID = 1;
+
+        if (isBeenScheduled(JOB_ID, context)){
+            Log.i(TAG, "scheduler.cancel(JOB_ID)");
+            scheduler.cancel(JOB_ID);
+        } else{
+            Log.i(TAG, "scheduler.schedule(jobInfo)");
+            int pollInterval = QueryPreferences.getPollInterval(context);
+            Log.i(TAG, "the poll interval is: " + pollInterval + " ms");
+            JobInfo jobInfo = new JobInfo.Builder(
+                    JOB_ID, new ComponentName(context, PollJobService.class))
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                    .setPeriodic(pollInterval)
+                    .setPersisted(true)
+                    .build();
+            scheduler.schedule(jobInfo);
+        }
+    }
+
+    @TargetApi(21)
+    public static boolean isBeenScheduled(int JOB_ID, Context context){
+        JobScheduler scheduler = (JobScheduler)
+                context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        boolean hasBeenScheduled = false;
+        for (JobInfo jobInfo : scheduler.getAllPendingJobs()){
+            if (jobInfo.getId() == JOB_ID) {
+                hasBeenScheduled = true;
+            }
+        }
+        return hasBeenScheduled;
+    }
 
     @Override
     public boolean onStartJob(JobParameters params) {
