@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">最新优惠</string>
+
+    <string name="share_this_product">分享该商品</string>
+    <string name="product_preview_image">商品缩略图</string>
+    <string name="how_worth_buying">值得买程度</string>
+    <string name="how_many_comments">评论热门程度</string>
+    <string name="separator">&#160;|&#160;</string>
+    <string name="no_result">找不到\"%1$s\"的搜索结果。</string>
+
+    <string name="action_share_url">分享</string>
+    <string name="search">搜索</string>
+    <string name="clear_search">清除搜索</string>
+    <string name="refresh">刷新</string>
+    <string name="search_subtitle_format">搜索: %1$s</string>
+    <string name="start_polling">开启轮询</string>
+    <string name="stop_polling">关闭轮询</string>
+    <string name="new_products_title">最新优惠</string>
+    <string name="new_products_text">发现新的优惠商品</string>
+    <string name="new_products_toast">发现新优惠</string>
+    <string name="settings">设置</string>
+    <string name="pref_title_poll_interval">轮询间隔</string>
+    <string name="pref_summary_poll_interval">每%1$s在后台进行一次查询</string>
+    <string name="pref_choose_poll_interval">选择轮询时间</string>
+    <string name="pref_1_minute_poll_interval">1分钟</string>
+    <string name="pref_5_minutes_poll_interval">5分钟</string>
+    <string name="pref_15_minutes_poll_interval">15分钟</string>
+    <string name="pref_30_minutes_poll_interval">30分钟</string>
+    <string name="pref_1_hour_poll_interval">1小时</string>
+    <string name="share_discount">分享优惠信息 via</string>
+</resources>

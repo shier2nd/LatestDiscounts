@@ -103,7 +103,7 @@ public class PollService extends IntentService {
 
             Notification notification = new NotificationCompat.Builder(this)
                     .setTicker(resources.getString(R.string.new_products_title))
-                    .setSmallIcon(R.drawable.ic_sale_discounts)
+                    .setSmallIcon(R.drawable.ic_notification_discounts)
                     .setContentTitle(resources.getString(R.string.new_products_title))
                     .setContentText(resources.getString(R.string.new_products_text))
                     .setContentIntent(pi)

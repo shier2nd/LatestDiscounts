@@ -27,4 +27,5 @@
     <string name="pref_15_minutes_poll_interval">15 minutes</string>
     <string name="pref_30_minutes_poll_interval">30 minutes</string>
     <string name="pref_1_hour_poll_interval">1 hour</string>
+    <string name="share_discount">Share discount information via</string>
 </resources>

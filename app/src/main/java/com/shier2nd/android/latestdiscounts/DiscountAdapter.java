@@ -1,6 +1,10 @@
 package com.shier2nd.android.latestdiscounts;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -103,9 +107,23 @@ public class DiscountAdapter extends RecyclerView.Adapter {
         return mDiscountItems.size();
     }
 
-    private void browse(Context context, int position) {}
+    private void browse(Context context, int position) {
+        String url = mDiscountItems.get(position).getDiscountUri().toString();
+        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder()
+                .setToolbarColor(context.getResources().getColor(R.color.colorPrimary))
+                .setShowTitle(true);
+        CustomTabsIntent customTabsIntent = builder.build();
+        customTabsIntent.launchUrl((Activity) context, Uri.parse(url));
+    }
 
-    private void share(Context context, int position) {}
+    private void share(Context context, int position) {
+        DiscountItem item = mDiscountItems.get(position);
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.setType("text/plain");
+        i.putExtra(Intent.EXTRA_TEXT, item.getShareInfo());
+        i = Intent.createChooser(i, context.getString(R.string.share_discount));
+        context.startActivity(i);
+    }
 
     public static class DiscountViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {

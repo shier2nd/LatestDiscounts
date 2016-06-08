@@ -132,4 +132,8 @@ public class DiscountItem {
                 .appendPath(mDiscountId)
                 .build();
     }
+
+    public String getShareInfo() {
+        return getTitle() + "\n" + getDiscountUri();
+    }
 }
