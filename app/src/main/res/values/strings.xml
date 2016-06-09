@@ -22,10 +22,5 @@
     <string name="pref_title_poll_interval">Poll Interval</string>
     <string name="pref_summary_poll_interval">Poll for new results every %1$s</string>
     <string name="pref_choose_poll_interval">Choose poll interval</string>
-    <string name="pref_1_minute_poll_interval">1 minute</string>
-    <string name="pref_5_minutes_poll_interval">5 minutes</string>
-    <string name="pref_15_minutes_poll_interval">15 minutes</string>
-    <string name="pref_30_minutes_poll_interval">30 minutes</string>
-    <string name="pref_1_hour_poll_interval">1 hour</string>
     <string name="share_discount">Share discount information via</string>
 </resources>

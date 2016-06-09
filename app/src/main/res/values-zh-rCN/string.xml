@@ -22,10 +22,5 @@
     <string name="pref_title_poll_interval">轮询间隔</string>
     <string name="pref_summary_poll_interval">每%1$s在后台进行一次查询</string>
     <string name="pref_choose_poll_interval">选择轮询时间</string>
-    <string name="pref_1_minute_poll_interval">1分钟</string>
-    <string name="pref_5_minutes_poll_interval">5分钟</string>
-    <string name="pref_15_minutes_poll_interval">15分钟</string>
-    <string name="pref_30_minutes_poll_interval">30分钟</string>
-    <string name="pref_1_hour_poll_interval">1小时</string>
     <string name="share_discount">分享优惠信息 via</string>
 </resources>
