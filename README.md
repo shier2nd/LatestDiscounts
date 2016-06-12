@@ -2,7 +2,7 @@
 
 Purified version of SMZDM client - 更纯净的什么值得买客户端
 
-![LatestDiscounts](https://raw.githubusercontent.com/shier2nd/LatestDiscounts/master/LatestDiscounts.png)
+![LatestDiscounts](https://raw.githubusercontent.com/shier2nd/LatestDiscounts/master/LatestDiscounts.jpg)
 
 __Disclaimer - 声明__  
 
