@@ -2,9 +2,9 @@
 
 Purified version of SMZDM client - 更纯净的什么值得买客户端
 
-[LatestDiscounts.png](https://raw.githubusercontent.com/shier2nd/LatestDiscounts/master/LatestDiscounts.png)
+![LatestDiscounts](https://raw.githubusercontent.com/shier2nd/LatestDiscounts/master/LatestDiscounts.png)
 
-_Disclaimer - 声明_
+__Disclaimer - 声明__  
 
 Some resource files of this app come from the official SMZDM client, and the others are acquired from the network. In addition, all Api used in the app is obtained by intercepting the network packets of the official SMZDM client, the final explanation rights are reserved by SMZDM. This is a free app, and only available for studying and researching but not for any other purpose. If there is any violation of copyright or related agreements, please contact me to modify or delete it.
 
