@@ -12,7 +12,7 @@ Some resource files of this app come from the official SMZDM client, and the oth
 
 ## Features - 特性
 
-- All about home recommended and search information in SMZDM - 只提取什么值得买的首页推荐和搜索信
+- All about home recommended and search information in SMZDM - 只提取什么值得买的首页推荐和搜索信息
 - Allow users to poll for new search results in the background. - 允许用户开启后台轮询最新搜索结果的功能
 - Light weighted, and extremely useful - 轻量，且功能非常实用
 - Do not request useless permission - 不需要多余的权限
